@@ -7,7 +7,9 @@ import pandas as pd
 import json
 from tqdm.auto import tqdm
 from sklearn.model_selection import train_test_split
-
+from sklearn.preprocessing import LabelEncoder
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
 
 
 # Function to resize images while maintaining aspect ratio
@@ -18,7 +20,7 @@ def resize_image(image, base_width):
 
 # Resize the first few images to a width of 800 pixels
 resized_images = []
-for i in range(2):
+for i in range(5):
     image = dataset['train'][i]['image']
     resized_image = resize_image(image, 800)
     resized_images.append(resized_image)
@@ -78,6 +80,18 @@ for col in annotations_df.select_dtypes(include='number').columns:
 for col in annotations_df.select_dtypes(include='object').columns:
     annotations_df[col].fillna(annotations_df[col].mode()[0], inplace=True)
 
+annotations_df['nm'] = annotations_df['nm'].apply(lambda x: ', '.join(x) if isinstance(x, list) else x)
+annotations_df['cnt'] = annotations_df['cnt'].apply(lambda x: ', '.join(x) if isinstance(x, list) else x)
+
+le = LabelEncoder()
+
+for col in annotations_df.select_dtypes(include='object').columns:
+    annotations_df[col] = le.fit_transform(annotations_df[col])
+
+# Display the head of the DataFrame to confirm changes
+# print(annotations_df.head())
+
+
 
 # Define the features and the target
 X = annotations_df.drop('price', axis=1) # Features
@@ -87,7 +101,17 @@ y = annotations_df['price'] # Target
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Output the shapes of the resulting datasets
-# print(X.columns)
+print(X.columns)
 
 print('Training set shape:', X_train.shape, y_train.shape)
 print('Test set shape:', X_test.shape, y_test.shape)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+print('The linear regression model has been trained successfully.')
+
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(mse, r2)
