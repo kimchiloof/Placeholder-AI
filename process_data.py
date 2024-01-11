@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import json
 from tqdm.auto import tqdm
-# Splitting the dataset into training and test sets
 from sklearn.model_selection import train_test_split
+
 
 
 # Function to resize images while maintaining aspect ratio
@@ -44,13 +44,13 @@ def parse_annotations(annotations):
     # Convert to DataFrame
     return pd.DataFrame(menu_data)
 
-# # Parse the annotations for all images
-# annotations_df_list = []
-# for i in tqdm(range(5)):
-#     annotations_df_list.append(parse_annotations(dataset['train'][i]))
+# Parse the annotations for all images
+annotations_df_list = []
+for i in tqdm(range(5)):
+    annotations_df_list.append(parse_annotations(dataset['train'][i]))
 
-for annotation in tqdm(dataset['train']):
-    annotations_df_list.append(parse_annotations(annotation))
+# for annotation in tqdm(dataset['train']):
+#     annotations_df_list.append(parse_annotations(annotation))
 
 # Combine all the DataFrames into a single DataFrame
 annotations_df = pd.concat(annotations_df_list, ignore_index=True)
@@ -78,3 +78,16 @@ for col in annotations_df.select_dtypes(include='number').columns:
 for col in annotations_df.select_dtypes(include='object').columns:
     annotations_df[col].fillna(annotations_df[col].mode()[0], inplace=True)
 
+
+# Define the features and the target
+X = annotations_df.drop('price', axis=1) # Features
+y = annotations_df['price'] # Target
+
+# Split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Output the shapes of the resulting datasets
+# print(X.columns)
+
+print('Training set shape:', X_train.shape, y_train.shape)
+print('Test set shape:', X_test.shape, y_test.shape)
